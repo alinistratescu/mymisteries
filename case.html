@@ -237,7 +237,7 @@
         const params = new URLSearchParams(window.location.search);
         const idx = parseInt(params.get('case'));
         const container = document.getElementById('case-container');
-        fetch(`http://127.0.0.1:5000/api/case/${idx}`)
+        fetch(`https://mymisteries-4.onrender.com/api/case/${idx}`)
             .then(res => res.json())
             .then(m => {
                 if (m.error) {
@@ -287,7 +287,7 @@
                     e.preventDefault();
                     const selected = document.getElementById('guess-suspect').value;
                     // Fetch real killer from backend
-                    fetch(`http://127.0.0.1:5000/api/real_killer/${idx}`)
+                    fetch(`https://mymisteries-4.onrender.com/api/real_killer/${idx}`)
                         .then(res => res.json())
                         .then(data => {
                             const realKiller = data.name;

@@ -378,7 +378,7 @@
         const imgFileInput = document.getElementById('img-file');
         const imgUrlInput = document.getElementById('img');
         
-        fetch('http://127.0.0.1:5000/api/cases')
+        fetch('https://mymisteries-4.onrender.com/api/cases')
             .then(res => res.json())
             .then(mysteries => {
                 const list = document.getElementById('mystery-list');
@@ -536,7 +536,7 @@
             let img = imgUrlInput.value.trim();
             if (!img) img = DEFAULT_IMG;
             const realKiller = document.getElementById('real-killer').value.trim();
-            fetch('http://127.0.0.1:5000/api/cases', {
+            fetch('https://mymisteries-4.onrender.com/api/cases', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, desc, img, clues, timeline, realKiller, suspects })
@@ -580,7 +580,7 @@
             btn.disabled = true;
             btn.textContent = 'Generating...';
             try {
-                const res = await fetch('http://127.0.0.1:5000/api/generate_case', { method: 'POST' });
+                const res = await fetch('https://mymisteries-4.onrender.com/api/generate_case', { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
                     document.getElementById('add-mystery-msg').textContent = 'Random case generated! Reloading...';
