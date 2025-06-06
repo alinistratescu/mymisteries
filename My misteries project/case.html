@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Solve My Mysteries - Case</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #f8f6f2; 
+            margin: 0; 
+            color: #23232b;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 40px auto; 
+            padding: 2em; 
+            background: #fffbe9; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 16px #e2cfa1, 0 1.5px 6px #bfa76a33; 
+            border: 1.5px solid #e2cfa1;
+        }
+        h1, h2, h3 { 
+            color: #6b4f1d; 
+            text-shadow: 0 1px 0 #f5e6c2;
+            letter-spacing: 0.01em;
+        }
+        .section {
+            background: #fdf6e3;
+            border-radius: 10px;
+            box-shadow: 0 1px 8px #e2cfa1;
+            padding: 1.2em 1.5em;
+            margin-bottom: 1.5em;
+            border: 1.5px solid #e2cfa1;
+        }
+        .clues-list, .timeline-list, .suspects-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2em;
+            justify-content: center;
+        }
+        .clue {
+            background: #fffbe9;
+            border-radius: 10px;
+            box-shadow: 0 1px 8px #e2cfa1;
+            width: 340px;
+            min-height: 110px;
+            padding: 1em;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            border: 1.5px solid #e2cfa1;
+            justify-content: flex-start;
+            gap: 1em;
+        }
+        .clue img {
+            width: 110px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px #e2cfa1;
+            border: 1px solid #e2cfa1;
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+        .clue-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            min-width: 0;
+        }
+        .clue-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin: 0 0 0.2em 0;
+            color: #6b4f1d;
+            text-align: left;
+            word-break: break-word;
+        }
+        .clue-desc {
+            font-size: 0.98em;
+            color: #5a4a2a;
+            margin-bottom: 0.2em;
+            text-align: left;
+            word-break: break-word;
+        }
+        .timeline-list {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.7em;
+            margin-left: 0.2em;
+            list-style: none;
+            padding-left: 0;
+        }
+        .timeline-event, .timeline-list li {
+            background: #fffbe9;
+            border-radius: 7px;
+            box-shadow: 0 1px 4px #e2cfa1;
+            border: 1px solid #e2cfa1;
+            padding: 0.7em 1em;
+            color: #5a4a2a;
+            font-size: 1em;
+            margin-bottom: 0;
+            text-align: left;
+            min-width: 220px;
+            max-width: 420px;
+            width: fit-content;
+        }
+        .suspects-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2em;
+            justify-content: center;
+        }
+        .suspect {
+            min-width: 220px;
+            max-width: 260px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1.5em;
+        }
+        .suspect img {
+            width: 120px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 5px;
+            box-shadow: 0 1px 4px #e2cfa1;
+            border: 1px solid #e2cfa1;
+            margin-bottom: 0.5em;
+            background: #fdf6e3;
+        }
+        .suspect-details {
+            font-size: 0.98em;
+            color: #5a4a2a;
+            margin-bottom: 0.3em;
+            text-align: center;
+        }
+        .guess-section {
+            background: #fffbe9;
+            border-radius: 10px;
+            box-shadow: 0 1px 8px #e2cfa1;
+            border: 1.5px solid #e2cfa1;
+            padding: 1.2em 1.5em;
+            margin-bottom: 1.5em;
+        }
+        .guess-btn {
+            background: linear-gradient(90deg,#e2cfa1 60%,#bfa76a 100%);
+            color: #6b4f1d;
+            border: none;
+            border-radius: 4px;
+            padding: 0.5em 1.2em;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 1px 4px #e2cfa1;
+            transition: background 0.2s;
+        }
+        .guess-btn:hover {
+            background: linear-gradient(90deg,#bfa76a 60%,#e2cfa1 100%);
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(240,224,180,0.32);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .popup-content {
+            background: #fffbe9;
+            padding: 2.5em 2em 2em 2em;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 96%;
+            position: relative;
+            box-shadow: 0 8px 32px #e2cfa1, 0 1.5px 6px #bfa76a33;
+            border: 1.5px solid #e2cfa1;
+            animation: popupIn 0.25s cubic-bezier(.4,1.6,.6,1) 1;
+            text-align: center;
+        }
+        @keyframes popupIn {
+            from { transform: scale(0.97) translateY(30px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .close-popup {
+            position: absolute; top: 10px; right: 10px;
+            background: none; border: none; font-size: 1.5em; cursor: pointer; color: #bfa76a;
+        }
+        .notes-section {
+            background: #fffbe9;
+            border-radius: 10px;
+            box-shadow: 0 1px 8px #e2cfa1;
+            border: 1.5px solid #e2cfa1;
+            padding: 1.2em 1.5em;
+            margin-bottom: 1.5em;
+        }
+        .notes-section textarea {
+            width: 100%;
+            min-width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-height: 60px;
+            border-radius: 6px;
+            border: 1.5px solid #e2cfa1;
+            background: #fdf6e3;
+            color: #5a4a2a;
+            padding: 0.5em;
+            font-size: 1em;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+        .notes-section textarea:focus {
+            border: 1.5px solid #bfa76a;
+            outline: none;
+            background: #fffbe9;
+        }
+        /* Responsive */
+        @media (max-width: 700px) {
+            .container { padding: 1em; }
+            .clues-list, .timeline-list, .suspects-list { flex-direction: column; gap: 0.7em; }
+            .clue, .timeline-event, .suspect { width: 98vw; max-width: 340px; }
+            .section, .guess-section, .notes-section { padding: 1em 0.5em; }
+            .timeline-list { align-items: stretch; }
+            .timeline-event, .timeline-list li { max-width: 98vw; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="case-container">
+        <!-- Case content will be loaded here -->
+    </div>
+    <script>
+        // Fetch case data from backend API
+        const params = new URLSearchParams(window.location.search);
+        const idx = parseInt(params.get('case'));
+        const container = document.getElementById('case-container');
+        fetch(`http://127.0.0.1:5000/api/case/${idx}`)
+            .then(res => res.json())
+            .then(m => {
+                if (m.error) {
+                    container.innerHTML = '<h2>Case not found</h2>';
+                    return;
+                }
+                let html = `<h1>${m.title}</h1>`;
+                html += `<div class='section'><h2>Case Overview</h2><p><strong>Background:</strong> ${m.background}</p><p><strong>Time & Location:</strong> ${m.time}</p></div>`;
+                html += `<div class='section'><h2>Clues</h2><div class='clues-list'>`;
+                m.clues.forEach(clue => {
+                    // Example for rendering a clue:
+                    // <div class="clue">
+                    //   <img src="CLUE_IMG_URL" alt="CLUE_TITLE">
+                    //   <div class="clue-content">
+                    //     <div class="clue-title">CLUE_TITLE</div>
+                    //     <div class="clue-desc">CLUE_DESC</div>
+                    //   </div>
+                    // </div>
+                    html += `<div class="clue">
+                                <img src='${clue.img}' alt='${clue.title}'>
+                                <div class="clue-content">
+                                    <div class="clue-title">${clue.title}</div>
+                                    <div class="clue-desc">${clue.desc}</div>
+                                </div>
+                             </div>`;
+                });
+                html += `</div></div>`;
+                html += `<div class='section'><h2>Suspect Profiles</h2><div class='suspects-list'>`;
+                m.suspects.forEach(s => {
+                    html += `<div class='suspect'><img src='${s.img}' alt='${s.name}'><strong>${s.name}</strong><br>Age: ${s.age}<br>Relationship: ${s.relation}<br>Alibi: ${s.alibi}<p><em>Personal Notes:</em> ${s.notes}</p></div>`;
+                });
+                html += `</div></div>`;
+                html += `<div class='section timeline'><h2>Timeline</h2><ul class='timeline-list'>`;
+                m.timeline.forEach(t => { html += `<li>${t}</li>`; });
+                html += `</ul></div>`;
+                html += `<div class='section notes'><h2>Your Notes</h2><textarea style="width:100%;min-width:100%;max-width:100%;min-height:120px; box-sizing:border-box;" placeholder='Write your deductions or ideas here...'></textarea></div>`;
+                // GUESS SECTION: dropdown and popup
+                html += `<div class='section guess'><h2>Make Your Guess</h2><form id='guess-form'><select id='guess-suspect' required style='padding:0.5em;border-radius:4px;border:1px solid #ccc;width:60%;'>`;
+                m.suspects.forEach(s => {
+                    html += `<option value="${s.name}">${s.name}</option>`;
+                });
+                html += `</select><button type='submit' class='guess-btn'>Submit</button></form></div>`;
+                html += `<div id='guess-popup' class='popup' style='display:none;'><div class='popup-content'><span id='guess-popup-msg'></span><br><button onclick="document.getElementById('guess-popup').style.display='none'" class='close-popup'>OK</button></div></div>`;
+                container.innerHTML = html;
+                // Attach guess form handler
+                document.getElementById('guess-form').onsubmit = function(e) {
+                    e.preventDefault();
+                    const selected = document.getElementById('guess-suspect').value;
+                    // Fetch real killer from backend
+                    fetch(`http://127.0.0.1:5000/api/real_killer/${idx}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const realKiller = data.name;
+                            const msg = (selected === realKiller)
+                                ? 'Correct! You solved the case!'
+                                : 'Incorrect. Try again!';
+                            document.getElementById('guess-popup-msg').textContent = msg;
+                            document.getElementById('guess-popup').style.display = 'flex';
+                        })
+                        .catch(() => {
+                            document.getElementById('guess-popup-msg').textContent = 'Could not verify your guess.';
+                            document.getElementById('guess-popup').style.display = 'flex';
+                        });
+                };
+            })
+            .catch(() => {
+                container.innerHTML = '<h2>Could not load case data</h2>';
+            });
+    </script>
+</body>
+</html>
