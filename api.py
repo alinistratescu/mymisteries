@@ -12,6 +12,7 @@ openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 
 app = Flask(__name__)
+# Enable CORS for the Flask app
 CORS(app)
 
 def get_db_connection():
