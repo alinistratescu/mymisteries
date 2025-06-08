@@ -10,6 +10,7 @@ import openai
 
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
+
 app = Flask(__name__)
 CORS(app)
 
@@ -94,12 +95,18 @@ def generate_case():
     )
 
     try:
+        print("=== Prompt Sent to AI ===")
+        print(prompt)
+
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=900,
             temperature=1.1,
         )
+        print("=== Raw Response from AI ===")
+        print(response)
+
         text = response.choices[0].message.content
         print("=== AI returned text ===")
         print(text)
@@ -162,6 +169,8 @@ def generate_case():
         return jsonify({'success': True, 'id': case_id})
 
     except Exception as e:
+        print("=== Exception Occurred ===")
+        print(str(e))
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -175,6 +184,97 @@ def get_real_killer(case_id):
         return jsonify({'name': killer['name']})
     else:
         return jsonify({'error': 'Not found'}), 404
+
+@app.route('/api/generate_new_case', methods=['POST'])
+def generate_new_case():
+    prompt = (
+        "You are an expert narrative designer for mystery and detective games.\n\n"
+        "Based on the following game structure, generate an entirely new, richly detailed case with unique characters, a compelling crime, and multiple suspects with motives and hidden connections. The story should unfold in 5 stages, each with a specific investigation focus, with suspects, clues, and actions evolving stage-by-stage. Include a final stage where the player must make a key decision about who is truly guilty.\n\n"
+        "Follow this JSON structure:\n\n"
+        "{\n"
+        "  \"stages\": [\n"
+        "    {\n"
+        "      \"name\": \"Stage Name\",\n"
+        "      \"description\": \"Brief but atmospheric summary of what happens in this stage.\",\n"
+        "      \"actions\": [\"Action 1\", \"Action 2\", \"...\"],\n"
+        "      \"action_clues\": {\n"
+        "        \"index\": [{ \"description\": \"Clue text\", \"location\": \"Where the clue is found\" }]\n"
+        "      },\n"
+        "      \"action_suspects\": {\n"
+        "        \"index\": [\n"
+        "          {\n"
+        "            \"name\": \"Suspect Name\",\n"
+        "            \"role\": \"Job or connection to crime\",\n"
+        "            \"motive\": \"Their possible reason for being involved\",\n"
+        "            \"notes\": \"Other behavioral or narrative observations\"\n"
+        "          }\n"
+        "        ]\n"
+        "      }\n"
+        "    },\n"
+        "    \"...more stages...\"\n"
+        "  ],\n"
+        "  \"suspects\": [\n"
+        "    { \"id\": 1, \"name\": \"Suspect 1\" },\n"
+        "    { \"id\": 2, \"name\": \"Suspect 2\" },\n"
+        "    \"...more suspects...\"\n"
+        "  ],\n"
+        "  \"endings\": [\n"
+        "    {\n"
+        "      \"type\": \"true\",\n"
+        "      \"suspectId\": X,\n"
+        "      \"summary\": \"The correct ending with true mastermind revealed.\"\n"
+        "    },\n"
+        "    {\n"
+        "      \"type\": \"alternate\",\n"
+        "      \"suspectId\": X,\n"
+        "      \"summary\": \"A plausible but incorrect ending with consequences.\"\n"
+        "    },\n"
+        "    {\n"
+        "      \"type\": \"secret\",\n"
+        "      \"suspectId\": X,\n"
+        "      \"summary\": \"A hidden resolution based on deeper investigation.\"\n"
+        "    },\n"
+        "    {\n"
+        "      \"type\": \"red herring\",\n"
+        "      \"suspectId\": X,\n"
+        "      \"summary\": \"A misleading ending based on false assumptions.\"\n"
+        "    }\n"
+        "  ]\n"
+        "}\n\n"
+        "Guidelines:\n\n"
+        "    The mystery must revolve around a valuable or meaningful object, person, or secret that has been stolen, sabotaged, or gone missing.\n\n"
+        "    Introduce at least 4 suspects with complex motives and evolving stories.\n\n"
+        "    Use clues and suspect behaviors to build tension across stages.\n\n"
+        "    The final stage should provide multiple plausible conclusions.\n\n"
+        "    Use evocative, cinematic language for descriptions.\n\n"
+        "Output only a valid JSON formatted according to the structure above."
+    )
+
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=900,
+            temperature=1.1,
+        )
+        print("=== Raw Response from AI ===")
+        print(response)
+
+        text = response.choices[0].message.content
+        print("=== AI returned text ===" + text)
+
+        json_match = re.search(r'{.*}', text, re.DOTALL)
+        if not json_match:
+            raise ValueError("No JSON object found in AI response.")
+
+        case_data = json.loads(json_match.group(0))
+        return jsonify({'success': True, 'case': case_data})
+
+    except Exception as e:
+        print("=== Exception Occurred ===")
+        print(str(e))
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

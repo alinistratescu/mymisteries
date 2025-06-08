@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Solve My Mysteries - Choose Mode</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f8f6f2;
+            margin: 0;
+            color: #23232b;
+        }
+        .container {
+            max-width: 500px;
+            margin: 80px auto;
+            padding: 2em;
+            background: #fffbe9;
+            border-radius: 12px;
+            box-shadow: 0 2px 16px #e2cfa1, 0 1.5px 6px #bfa76a33;
+            border: 1.5px solid #e2cfa1;
+            text-align: center;
+        }
+        h1 {
+            color: #6b4f1d;
+            margin-bottom: 1.5em;
+        }
+        .mode-btn {
+            display: block;
+            width: 100%;
+            margin: 1em 0;
+            padding: 1.2em;
+            font-size: 1.2em;
+            background: #e2cfa1;
+            color: #6b4f1d;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .mode-btn:hover {
+            background: #f5e6c2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Choose Your Mystery Mode</h1>
+        <button class="mode-btn" onclick="location.href='DynamicCase.html'">
+            Dynamic Cases
+        </button>
+        <button class="mode-btn" onclick="location.href='dashboard.html'">
+            Simple Cases
+        </button>
+    </div>
+</body>
+</html>
