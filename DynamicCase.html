@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dynamic Mystery Case - Solve My Mysteries</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f8f6f2;
+            margin: 0;
+            color: #23232b;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 2em;
+            background: #fffbe9;
+            border-radius: 12px;
+            box-shadow: 0 2px 16px #e2cfa1, 0 1.5px 6px #bfa76a33;
+            border: 1.5px solid #e2cfa1;
+        }
+        h1 {
+            color: #6b4f1d;
+            margin-bottom: 0.5em;
+        }
+        .stage {
+            margin: 2em 0 1.5em 0;
+            padding: 1.2em;
+            background: #fdf6e3;
+            border-radius: 10px;
+            box-shadow: 0 1px 8px #e2cfa1;
+        }
+        .actions {
+            margin: 1em 0;
+        }
+        .actions button {
+            margin: 0.3em 0.7em 0.3em 0;
+            padding: 0.6em 1.5em;
+            border-radius: 6px;
+            border: none;
+            background: #e2cfa1;
+            color: #6b4f1d;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .actions button:hover {
+            background: #f5e6c2;
+        }
+        .clues, .suspects {
+            margin: 1em 0 0.5em 0;
+            padding: 1em;
+            background: #fffbe9;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px #e2cfa1;
+        }
+        .location {
+            font-style: italic;
+            color: #8d7b4a;
+        }
+        .ending {
+            margin-top: 2em;
+            padding: 1.5em;
+            background: #e2cfa1;
+            border-radius: 10px;
+            color: #3e2723;
+            font-size: 1.15em;
+        }
+        .hidden { display: none; }
+        /* Custom Alert Modal */
+        #custom-alert {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        #custom-alert > div {
+            background: #fffbe9;
+            padding: 2em;
+            border-radius: 10px;
+            box-shadow: 0 2px 16px #e2cfa1;
+            text-align: center;
+            min-width: 220px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 id="case-title"></h1>
+    <p id="case-summary"></p>
+    <div id="deadline"></div>
+    <div id="stage-area"></div>
+    <div id="ending-area" class="ending hidden"></div>
+    <button onclick="generateNewCase()" style="margin-top: 1em; padding: 0.6em 1.5em; border-radius: 6px; border: none; background: #e2cfa1; color: #6b4f1d; font-weight: 600; cursor: pointer; transition: background 0.2s;">Generate a New Case</button>
+</div>
+<!-- Custom Alert Modal -->
+<div id="custom-alert">
+  <div>
+    <div id="custom-alert-message" style="margin-bottom:1.5em;"></div>
+    <button onclick="closeCustomAlert()">OK</button>
+  </div>
+</div>
+<script>
+const caseData = {
+  "stages": [
+    {
+      "name": "Crime Scene Investigation",
+      "description": "The Grand Duke's Sapphire, the centerpiece of the new \"Treasures of Royalty\" exhibit, has vanished overnight from its supposedly impenetrable display case. The museum is in lockdown, and the police are on their way. You, as the lead detective, arrive at the scene.",
+      "actions": [
+        "Examine the display case and surrounding area.",
+        "Interview Curator Evelyn Reed.",
+        "Check security camera footage (if available).",
+        "Inspect the ventilation system and possible entry points.",
+        "Talk to the night security guard.",
+        "Search the curator's office for clues.",
+        "Look for any discarded tools or unusual items."
+      ],
+      "action_clues": {
+        "0": [
+          {
+            "description": "A faint scent of lavender and a tiny, almost invisible scratch on the inner locking mechanism of the display case.",
+            "location": "Display Case"
+          }
+        ],
+        "3": [
+          {
+            "description": "A small, intricate hairpin caught in a vent near the exhibit, too delicate to belong to any of the male staff.",
+            "location": "Ventilation System"
+          }
+        ]
+      },
+      "action_suspects": {
+        "1": [
+          {
+            "name": "Evelyn Reed",
+            "role": "Museum Curator",
+            "motive": "Appears overly distraught, seems to be hiding something about the display's security protocols, possibly to protect her reputation.",
+            "notes": "Stressed and evasive when asked about the security system's vulnerabilities."
+          }
+        ],
+        "4": [
+          {
+            "name": "Marcus Thorne",
+            "role": "Head of Security",
+            "motive": "Seems agitated, claims to have been on a routine patrol at the time of the theft but avoids eye contact and stutters when detailing his route.",
+            "notes": "Ex-military, known for his strictness; seems unusually nervous."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Suspect Interviews",
+      "description": "With initial findings, you begin questioning key personnel. Their stories reveal inconsistencies, hidden motives, and a web of relationships within the museum.",
+      "actions": [
+        "Interview Art Dealer Julian Vance.",
+        "Interview Restoration Artist Sarah Jenkins.",
+        "Re-interview Security Head Marcus Thorne.",
+        "Examine museum blueprints for secret passages.",
+        "Check staff access logs for the night of the theft.",
+        "Search for any recent large purchases by museum staff.",
+        "Talk to other museum employees about personal conflicts."
+      ],
+      "action_clues": {
+        "0": [
+          {
+            "description": "Julian Vance has an unusually high interest in the sapphire's historical 'loopholes' regarding ownership and asks specific questions about its provenance.",
+            "location": "Julian's Gallery"
+          }
+        ],
+        "1": [
+          {
+            "description": "Sarah Jenkins mentions a recent heated argument with Curator Reed about the sapphire's security being insufficient and a potential conflict of interest.",
+            "location": "Restoration Workshop"
+          }
+        ],
+        "2": [
+          {
+            "description": "Thorne's patrol route shows a suspicious 15-minute gap not accounted for, during which he claims to have been 'checking on a faulty sensor'.",
+            "location": "Security Office"
+          }
+        ],
+        "4": [
+          {
+            "description": "Sarah Jenkins had approved late-night access to the exhibit area two nights before the theft, citing 'final touch-ups'.",
+            "location": "Staff Access Log"
+          }
+        ]
+      },
+      "action_suspects": {
+        "0": [
+          {
+            "name": "Julian Vance",
+            "role": "Art Dealer",
+            "motive": "Known for acquiring rare pieces, has a history of questionable ethics. He's charming but too curious about the sapphire's market value.",
+            "notes": "Has connections to a private collector known for illicit acquisitions in the past."
+          }
+        ],
+        "1": [
+          {
+            "name": "Sarah Jenkins",
+            "role": "Restoration Artist",
+            "motive": "Knew the sapphire intimately, had the skills to bypass minor security features, and has a strong sense of ownership over the artifacts she works with.",
+            "notes": "Highly meticulous and passionate about the sapphire; seems resentful of the museum's security decisions."
+          }
+        ],
+        "2": [
+          {
+            "name": "Marcus Thorne",
+            "role": "Head of Security",
+            "motive": "His unexplained 'gap' in patrol could be a cover-up for his own involvement, or he could have been bribed.",
+            "notes": "Becomes defensive when pressed about the missing 15 minutes."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Revelations and Deduction",
+      "description": "The investigation deepens as new evidence surfaces, forcing you to confront hidden truths and make crucial deductions about the culprit's methods and motives. The pressure is mounting.",
+      "actions": [
+        "Trace the origin of the lavender scent found at the crime scene.",
+        "Analyze the intricate hairpin found in the ventilation system.",
+        "Investigate Julian Vance's recent financial transactions.",
+        "Confront Curator Evelyn Reed about the security flaws.",
+        "Review past theft incidents at other museums involving similar valuable artifacts.",
+        "Look into the background of the 'Anonymous Collector' mentioned by Julian Vance.",
+        "Set up a controlled environment for a re-enactment of the theft."
+      ],
+      "action_clues": {
+        "0": [
+          {
+            "description": "The lavender scent matches a rare, custom-made perfume worn exclusively by Restoration Artist Sarah Jenkins.",
+            "location": "Sarah's Workshop"
+          }
+        ],
+        "1": [
+          {
+            "description": "The hairpin is identified as a bespoke item belonging to Curator Evelyn Reed, but she denies ever being near the vents or losing it.",
+            "location": "Evelyn's Office"
+          }
+        ],
+        "2": [
+          {
+            "description": "Julian Vance recently received a large, untraceable deposit from an offshore account just days before the sapphire's theft.",
+            "location": "Bank Records"
+          }
+        ]
+      },
+      "action_suspects": {
+        "0": [
+          {
+            "name": "Sarah Jenkins",
+            "role": "Restoration Artist",
+            "motive": "Strong circumstantial evidence linking her directly to the crime scene, perhaps driven by a desire to 'save' the sapphire from what she perceived as inadequate museum care.",
+            "notes": "Her initial calm demeanor cracks when presented with the evidence of the lavender scent."
+          }
+        ],
+        "1": [
+          {
+            "name": "Evelyn Reed",
+            "role": "Museum Curator",
+            "motive": "Direct link to a discarded item at a crucial entry point, suggesting involvement or complicity. Perhaps she was blackmailed or pressured.",
+            "notes": "Visibly unnerved by the hairpin discovery; offers vague excuses."
+          }
+        ],
+        "2": [
+          {
+            "name": "Julian Vance",
+            "role": "Art Dealer",
+            "motive": "Financial motive becoming clearer, suggesting he might be the buyer or a key facilitator for the actual thief.",
+            "notes": "Becomes defensive and changes the subject when asked about the offshore deposit."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Secret Alliances",
+      "description": "The plot thickens as you uncover secret pacts and unexpected betrayals. It seems the sapphire wasn't just stolen; it was part of a larger, more intricate scheme involving multiple players.",
+      "actions": [
+        "Eavesdrop on a suspicious conversation between Sarah Jenkins and Marcus Thorne.",
+        "Search Evelyn Reed's personal safe, rumored to contain sensitive documents.",
+        "Track the mysterious untraceable deposit from Julian Vance to its source.",
+        "Confront Sarah Jenkins directly about her late-night access and the lavender scent.",
+        "Investigate Marcus Thorne's financial records and personal life.",
+        "Set up a monitored meeting with Julian Vance, pretending to be a potential buyer.",
+        "Review the museum's insurance policy details regarding high-value artifacts."
+      ],
+      "action_clues": {
+        "0": [
+          {
+            "description": "Overheard Sarah and Marcus whispering about 'their share' and a 'buyer with specific tastes' in the museum cafe's secluded corner.",
+            "location": "Museum Cafe",
+            "suspectId": [1, 2]
+          }
+        ],
+        "1": [
+          {
+            "description": "A coded ledger detailing payments to Marcus Thorne and a hidden bank account, alongside correspondence hinting at 'external pressures' on Evelyn.",
+            "location": "Evelyn's Safe",
+            "suspectId": [2, 3]
+          }
+        ],
+        "2": [
+          {
+            "description": "The untraceable deposit traces back to an offshore account linked to a shell corporation associated with a notorious, shadowy art syndicate known as 'The Consortium'.",
+            "location": "International Banking Data",
+            "suspectId": [4, 5]
+          }
+        ],
+        "4": [
+          {
+            "description": "Marcus Thorne has significant gambling debts recently paid off in a large, lump sum, coinciding with the sapphire's theft.",
+            "location": "Personal Financial Records",
+            "suspectId": [2]
+          }
+        ]
+      },
+      "action_suspects": {
+        "0": [
+          {
+            "id": 1,
+            "role": "Restoration Artist / Accomplice",
+            "motive": "Now strongly suspected of being an active participant in the theft, possibly working with Marcus Thorne, perhaps for financial gain or a sense of 'justice' for the sapphire.",
+            "notes": "Her initial evasiveness turns into defiance when confronted with the evidence of her collaboration."
+          }
+        ],
+        "1": [
+          {
+            "id": 3,
+            "role": "Museum Curator / Complicit",
+            "motive": "Appears to be directly involved in the conspiracy, possibly blackmailed or coerced due to financial troubles or other vulnerabilities.",
+            "notes": "The ledger confirms her connection to Marcus Thorne and the broader scheme."
+          }
+        ],
+        "2": [
+          {
+            "id": 4,
+            "role": "Art Dealer / Facilitator",
+            "motive": "Confirmed as the financier/fence for the stolen sapphire, acting as a middleman for a larger organization.",
+            "notes": "Reveals he works for 'The Consortium' under duress, but denies being the mastermind."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Final Decision",
+      "description": "All the pieces are on the board. You've uncovered a complex web of deceit and betrayal. It's time to connect the dots and accuse the mastermind behind the theft, or risk letting them get away. The fate of the sapphire, and the reputation of the museum, rests on your final accusation.",
+      "actions": [
+        "Present evidence to the police about the conspiracy between Sarah Jenkins and Marcus Thorne.",
+        "Confront Curator Evelyn Reed with the ledger and her involvement with 'The Consortium'.",
+        "Expose Julian Vance's financial dealings and his connection to 'The Consortium' to the authorities.",
+        "Set a trap for 'The Shadow' (the true mastermind) using a decoy sapphire.",
+        "Interview a former disgruntled employee who left under mysterious circumstances.",
+        "Analyze the sapphire's unique properties and any hidden markings.",
+        "Review all collected evidence one last time to ensure no stone is left unturned."
+      ],
+      "action_clues": {
+        "0": [
+          {
+            "description": "The police confirm a pattern of thefts matching Sarah and Marcus's modus operandi in other cities, involving similar valuable artifacts from institutions with lax security.",
+            "location": "Police Database"
+          }
+        ],
+        "1": [
+          {
+            "description": "Evelyn Reed confesses, revealing she was blackmailed by 'The Consortium' after accumulating massive gambling debts. She was forced to facilitate the theft by providing access and overriding security.",
+            "location": "Confession"
+          }
+        ],
+        "2": [
+          {
+            "description": "Julian Vance, when confronted with irrefutable evidence, confirms his role as a long-standing agent for 'The Consortium', responsible for finding buyers and distributing stolen artifacts.",
+            "location": "Interrogation Room"
+          }
+        ],
+        "4": [
+          {
+            "description": "A former employee, who was fired after reporting suspicious activity, states that 'The Consortium' has always been obsessed with historical artifacts connected to the Grand Duke's lineage, not just their monetary value.",
+            "location": "Former Employee's Testimony"
+          }
+        ],
+        "5": [
+          {
+            "description": "Forensic analysis reveals a minute, almost undetectable, unique laser engraving of the Grand Duke's ancestral family crest on the sapphire itself – a detail known only to a select few, including its original restorer, Sarah Jenkins.",
+            "location": "Forensic Lab"
+          }
+        ]
+      },
+      "action_suspects": {
+        "0": [
+          {
+            "name": "Sarah Jenkins",
+            "role": "Restoration Artist / Thief",
+            "motive": "Driven by a warped sense of preservation for the sapphire, and potentially personal gain, she collaborated with Marcus Thorne to steal it. Her knowledge of the sapphire's unique marking proves her direct involvement.",
+            "notes": "She believed the museum was unfit to protect such a masterpiece."
+          }
+        ],
+        "1": [
+          {
+            "name": "Marcus Thorne",
+            "role": "Head of Security / Accomplice",
+            "motive": "Complicit in the theft due to severe gambling debts and his willingness to exploit his position for financial gain.",
+            "notes": "Provided crucial access and security overrides, covering the tracks."
+          }
+        ],
+        "2": [
+          {
+            "name": "Evelyn Reed",
+            "role": "Museum Curator / Reluctant Accomplice",
+            "motive": "Blackmailed by 'The Consortium', she became an unwilling participant, providing inside information and access to protect herself.",
+            "notes": "Her confession lays bare the depths of the conspiracy."
+          }
+        ],
+        "3": [
+          {
+            "name": "Julian Vance",
+            "role": "Art Dealer / Consortium Agent",
+            "motive": "A professional facilitator for 'The Consortium', his motive is purely financial and driven by his role within the syndicate.",
+            "notes": "He is a key part of the network, but not the ultimate leader."
+          }
+        ],
+        "6": [
+          {
+            "name": "The Consortium (The Shadow)",
+            "role": "Mysterious Mastermind / Art Syndicate",
+            "motive": "The ultimate orchestrators, driven by a deep-seated obsession with collecting specific historical artifacts, possibly linked to the Grand Duke's lineage or for power/influence in the art world.",
+            "notes": "Their true identity and full scope of operations are revealed through the combined confessions and evidence, but 'The Shadow' remains a elusive figure."
+          }
+        ]
+      }
+    }
+  ],
+  "suspects": [
+    { "id": 1, "name": "Sarah Jenkins" },
+    { "id": 2, "name": "Marcus Thorne" },
+    { "id": 3, "name": "Evelyn Reed" },
+    { "id": 4, "name": "Julian Vance" },
+    { "id": 5, "name": "The Consortium (The Shadow)" }
+  ],
+  "endings": [
+    {
+      "type": "true",
+      "suspectId": 1,
+      "summary": "You deduce that Sarah Jenkins orchestrated the theft, using her restoration skills and knowledge of the sapphire's unique markings. The sapphire is recovered, and the museum's reputation is saved."
+    },
+    {
+      "type": "alternate",
+      "suspectId": 2,
+      "summary": "You accuse Marcus Thorne, the head of security, based on his suspicious patrol gap and gambling debts. He is fired, but the sapphire is never found, and the real culprit escapes justice."
+    },
+    {
+      "type": "secret",
+      "suspectId": 3,
+      "summary": "By uncovering Evelyn Reed's coded ledger and her connection to 'The Consortium', you reveal her reluctant involvement in the theft. She confesses, leading to a bittersweet resolution."
+    },
+    {
+      "type": "red herring",
+      "suspectId": 4,
+      "summary": "You accuse Julian Vance, the art dealer, based on his financial dealings and connections to 'The Consortium'. However, it turns out he was merely a facilitator, and the true mastermind remains elusive."
+    }
+  ]
+};
+
+// UI State
+let currentStage = 0;
+let cluesFound = [];
+let suspectsFound = [];
+let accused = null;
+let accusedId = null;
+let cluesPerStage = caseData.stages.map(() => []); // Track clues found per stage
+let suspectsPerStage = caseData.stages.map(() => []); // Track suspects found per stage
+let actionsUsedPerStage = caseData.stages.map(() => 0); // Track actions used per stage
+let MAX_ACTIONS_PER_STAGE = currentStage === caseData.stages.length - 1 ? 1 : 3;
+let actionsTakenPerStage = caseData.stages.map(() => []); // Track which actions were taken
+
+function renderCaseHeader() {
+    document.getElementById('case-title').textContent = caseData.title;
+    document.getElementById('case-summary').textContent = caseData.summary;
+    document.getElementById('deadline').textContent = `Time to solve: ${caseData.deadline_hours} hours`;
+}
+
+function renderStage() {
+    const stage = caseData.stages[currentStage];
+    const stageArea = document.getElementById('stage-area');
+    let MAX_ACTIONS_PER_STAGE = currentStage === caseData.stages.length - 1 ? 1 : 3;
+    let html = `<div class='stage'><h2>Stage ${currentStage+1}: ${stage.name}</h2><p>${stage.description}</p>`;
+    // Actions
+    html += `<div class='actions'><b>Actions (choose up to ${MAX_ACTIONS_PER_STAGE}):</b><br/>`;
+    stage.actions.forEach((action, idx) => {
+        const disabled = actionsUsedPerStage[currentStage] >= MAX_ACTIONS_PER_STAGE || actionsTakenPerStage[currentStage].includes(idx) ? 'disabled' : '';
+        html += `<button onclick='doAction(${idx})' ${disabled} id='action-btn-${idx}'>${action}</button>`;
+    });
+    // If suspects are revealed, add accuse action
+    let allSuspects = [].concat(...suspectsPerStage);
+    if (allSuspects.length > 0) {
+        html += `<br/><b>Accuse a suspect:</b><br/>`;
+        allSuspects.forEach((s, idx) => {
+            html += `<button onclick='accuse(${idx})'>Accuse ${s.name}</button> `;
+        });
+    }
+    html += `</div>`;
+    // Clues
+    let allClues = [].concat(...cluesPerStage);
+    if (allClues.length > 0) {
+        html += `<div class='clues'><b>Clues Found:</b><ul>`;
+        allClues.forEach(clue => {
+            html += `<li>${clue.description} <span class='location'>[${clue.location}]</span></li>`;
+        });
+        html += `</ul></div>`;
+    }
+    // Suspects
+    if (allSuspects.length > 0) {
+        html += `<div class='suspects'><b>Suspects:</b><ul>`;
+        allSuspects.forEach(s => {
+            html += `<li><b>${s.name}</b> (${s.role})<br/>Motive: ${s.motive}<br/><i>${s.notes}</i></li>`;
+        });
+        html += `</ul></div>`;
+    }
+    // Next stage or accuse
+    if (currentStage < caseData.stages.length - 1) {
+        if (actionsUsedPerStage[currentStage] >= MAX_ACTIONS_PER_STAGE) {
+            html += `<button onclick='nextStage()' style='margin-top:1em;'>Proceed to Next Stage</button>`;
+        } else {
+            html += `<div style='margin-top:1em; color:#bfa76a;'>Choose ${MAX_ACTIONS_PER_STAGE - actionsUsedPerStage[currentStage]} more action(s) to proceed.</div>`;
+        }
+    } else {
+        if (actionsUsedPerStage[currentStage] >= MAX_ACTIONS_PER_STAGE) {
+            html += `<div style='margin-top:1em;'><b>Who do you accuse?</b><br/>`;
+            allSuspects.forEach((s, idx) => {
+                html += `<button onclick='accuse(${idx})'>${s.name}</button> `;
+            });
+            html += `</div>`;
+        } else {
+            html += `<div style='margin-top:1em; color:#bfa76a;'>Choose ${MAX_ACTIONS_PER_STAGE - actionsUsedPerStage[currentStage]} more action(s) to proceed to accusation.</div>`;
+        }
+    }
+    html += `</div>`;
+    stageArea.innerHTML = html;
+    document.getElementById('ending-area').classList.add('hidden');
+}
+
+function doAction(idx) {
+    const stage = caseData.stages[currentStage];
+    if (actionsUsedPerStage[currentStage] >= MAX_ACTIONS_PER_STAGE || actionsTakenPerStage[currentStage].includes(idx)) return;
+    let msg = 'You chose to: ' + stage.actions[idx];
+    // Reveal clues for this action
+    if (stage.action_clues && stage.action_clues[idx]) {
+        stage.action_clues[idx].forEach(clue => {
+            if (!cluesPerStage[currentStage].some(c => c.description === clue.description)) {
+                cluesPerStage[currentStage].push(clue);
+                msg += `\nYou found a clue: ${clue.description}`;
+            }
+        });
+    }
+    // Reveal suspects for this action, but filter out removed suspects and prevent duplicates
+    if (stage.action_suspects && stage.action_suspects[idx]) {
+        stage.action_suspects[idx].forEach(suspect => {
+            if (
+                (!window.removedSuspects || !window.removedSuspects.includes(suspect.name)) &&
+                ![].concat(...suspectsPerStage).some(s => s.name === suspect.name) &&
+                !suspectsPerStage[currentStage].some(s => s.name === suspect.name)
+            ) {
+                suspectsPerStage[currentStage].push(suspect);
+                msg += `\nYou discovered a suspect: ${suspect.name}`;
+            }
+        });
+    }
+    actionsUsedPerStage[currentStage]++;
+    actionsTakenPerStage[currentStage].push(idx);
+    alert(msg);
+    renderStage();
+}
+
+function nextStage() {
+    currentStage++;
+    renderStage();
+}
+
+function accuse(idx) {
+    let allSuspects = [].concat(...suspectsPerStage);
+    accused = allSuspects[idx].name;
+    accusedId = getSuspectIdByName(accused);
+    showEnding();
+}
+
+function accuseAction(idx) {
+    let allSuspects = [].concat(...suspectsPerStage);
+    let suspect = allSuspects[idx];
+    let suspectName = suspect.name;
+    let suspectId = getSuspectIdByName(suspectName);
+    // Check if correct
+    let isCorrect = false;
+    if (suspectId === 1) isCorrect = true;
+    if (isCorrect) {
+        accused = suspectName;
+        accusedId = suspectId;
+        showEnding();
+    } else {
+        // If on last stage, show escape message instead of deleting clues/suspects
+        if (currentStage === caseData.stages.length - 1) {
+            alert('You did not manage to find the criminal. The real culprit has escaped!');
+            document.getElementById('ending-area').innerHTML = `<b>Ending: FAILURE</b><br/>You failed to solve the case. The real culprit has escaped justice.`;
+            document.getElementById('ending-area').classList.remove('hidden');
+            document.getElementById('stage-area').innerHTML = '';
+            return;
+        }
+        // Not last stage: show custom alert, then move to next stage and remove clues/suspects
+        if (!window.removedSuspects) window.removedSuspects = [];
+        window.removedSuspects.push(suspectName);
+        // Remove all clues and suspects for this and previous stages
+        for (let i = 0; i <= currentStage; i++) {
+            cluesPerStage[i] = [];
+            suspectsPerStage[i] = [];
+            actionsTakenPerStage[i] = [];
+            actionsUsedPerStage[i] = 0;
+        }
+        showCustomAlert('The suspect is not the criminal.', function() {
+            currentStage++;
+            renderStage();
+        });
+    }
+}
+
+function getSuspectIdByName(name) {
+    let s = caseData.suspects.find(s => s.name === name);
+    return s ? s.id : null;
+}
+
+function showEnding() {
+    let ending = caseData.endings.find(e => e.suspectId && accusedId === e.suspectId) || caseData.endings[0];
+    document.getElementById('ending-area').innerHTML = `<b>Ending: ${ending.type.toUpperCase()}</b><br/>${ending.summary}`;
+    document.getElementById('ending-area').classList.remove('hidden');
+    document.getElementById('stage-area').innerHTML = '';
+}
+
+// Custom Alert functions
+function showCustomAlert(message, callback) {
+    document.getElementById('custom-alert-message').textContent = message;
+    document.getElementById('custom-alert').style.display = 'flex';
+    window._customAlertCallback = callback;
+}
+function closeCustomAlert() {
+    document.getElementById('custom-alert').style.display = 'none';
+    if (window._customAlertCallback) {
+        window._customAlertCallback();
+        window._customAlertCallback = null;
+    }
+}
+
+async function generateNewCase() {
+    try {
+        const response = await fetch('/api/generate_new_case', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const responseText = await response.text();
+        console.log('API Response:', responseText); // Log the raw response for debugging
+        const data = JSON.parse(responseText);
+
+        if (data.success) {
+            caseData = data.case;
+            currentStage = 0;
+            cluesFound = [];
+            suspectsFound = [];
+            accused = null;
+            accusedId = null;
+            cluesPerStage = caseData.stages.map(() => []);
+            suspectsPerStage = caseData.stages.map(() => []);
+            actionsUsedPerStage = caseData.stages.map(() => 0);
+            actionsTakenPerStage = caseData.stages.map(() => []);
+            renderCaseHeader();
+            renderStage();
+        } else {
+            alert('Failed to generate a new case: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error generating new case:', error);
+        alert('An error occurred while generating a new case.');
+    }
+}
+
+// Initial render
+renderCaseHeader();
+renderStage();
+</script>
+</body>
+</html>
