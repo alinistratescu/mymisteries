@@ -255,7 +255,7 @@ def generate_new_case():
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=900,
+            max_tokens=3000,
             temperature=1.1,
         )
         print("=== Raw Response from AI ===")
